@@ -33,7 +33,7 @@ class FileField(BaseFileField):
             return
 
         self.filename = current_app.features.upload.generate_filename(self.file.filename,
-            uuid_prefix, keep_filename, subfolders)
+            self.uuid_prefix, self.keep_filename, self.subfolders)
         if self.upload_dir:
             self.filename = os.path.join(self.upload_dir, self.filename)
         if self.backend_in_filename:
