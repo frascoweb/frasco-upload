@@ -34,3 +34,25 @@ class LocalStorageBackend(StorageBackend):
 
     def url_for(self, filename, **kwargs):
         return url_for("static_upload", filename=filename, **kwargs)
+
+
+@file_upload_backend
+class HttpStorageBackend(StorageBackend):
+    name = 'http'
+
+    def save(self, file, filename):
+        raise NotImplementedError
+
+    def url_for(self, filename, **kwargs):
+        return filename
+
+
+@file_upload_backend
+class HttpsStorageBackend(StorageBackend):
+    name = 'https'
+
+    def save(self, file, filename):
+        raise NotImplementedError
+
+    def url_for(self, filename, **kwargs):
+        return filename
