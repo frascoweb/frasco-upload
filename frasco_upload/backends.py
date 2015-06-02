@@ -44,7 +44,7 @@ class HttpStorageBackend(StorageBackend):
         raise NotImplementedError
 
     def url_for(self, filename, **kwargs):
-        return filename
+        return 'http://' + filename
 
 
 @file_upload_backend
@@ -55,4 +55,4 @@ class HttpsStorageBackend(StorageBackend):
         raise NotImplementedError
 
     def url_for(self, filename, **kwargs):
-        return filename
+        return 'https://' + filename
