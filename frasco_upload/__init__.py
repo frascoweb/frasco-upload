@@ -44,7 +44,8 @@ class UploadFeature(Feature):
         return None, filename
 
     @action(default_option='filename')
-    def generate_filename(self, filename, uuid_prefix=None, keep_filename=None, subfolders=None):
+    def generate_filename(self, filename, uuid_prefix=None, keep_filename=None, subfolders=None,
+                          backend=None):
         if uuid_prefix is None:
             uuid_prefix = self.options["uuid_prefixes"]
         if keep_filename is None:
@@ -67,6 +68,11 @@ class UploadFeature(Feature):
             else:
                 filename = os.path.join(os.path.join(*filename[:4]), filename)
 
+        if backend:
+            if backend is True:
+                backend = self.options['default_backend']
+            filename = backend + '://' + filename
+
         return filename
 
     @action(default_option='file')
@@ -76,12 +82,28 @@ class UploadFeature(Feature):
         file.save(tmp.name)
         return tmp.name
 
+    def save(self, file, filename=None, backend=None, **kwargs):
+        if not filename:
+            filename = self.generate_filename(file.filename, backend=backend, **kwargs)
+        r = filename
+        if not backend or backend is True:
+            backend, filename = self.get_backend_from_filename(filename)
+        self.get_backend(backend).save(file, filename)
+        return r
 
-def url_for_upload(filename, backend=None, **kwargs):
-    if backend is None:
-        backend, filename = current_app.features.upload.get_backend_from_filename(filename)
-    backend = current_app.features.upload.get_backend(backend)
-    return backend.url_for(filename, **kwargs)
+    def url_for(self, filename, backend=None, **kwargs):
+        if not backend:
+            backend, filename = self.get_backend_from_filename(filename)
+        return self.get_backend(backend).url_for(filename, **kwargs)
+
+    def delete(self, filename, backend=None):
+        if not backend:
+            backend, filename = self.get_backend_from_filename(filename)
+        self.get_backend(backend).delete(filename)
+
+
+def url_for_upload(filename, **kwargs):
+    return current_app.features.upload.url_for(filename, **kwargs)
 
 
 try:
