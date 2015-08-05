@@ -19,6 +19,7 @@ class UploadFeature(Feature):
     def init_app(self, app):
         self.backends = {}
         app.add_template_global(url_for_upload)
+        app.add_template_global(format_file_size)
 
         def send_uploaded_file(filename):
             return send_from_directory(self.options["upload_dir"], filename,
@@ -104,6 +105,14 @@ class UploadFeature(Feature):
 
 def url_for_upload(filename, **kwargs):
     return current_app.features.upload.url_for(filename, **kwargs)
+
+
+def format_file_size(size, suffix='B'):
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(size) < 1024.0:
+            return "%3.1f%s%s" % (size, unit, suffix)
+        size /= 1024.0
+    return "%.1f%s%s" % (size, 'Y', suffix)
 
 
 try:

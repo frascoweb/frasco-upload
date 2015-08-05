@@ -8,9 +8,11 @@ import uuid
 
 class FileField(BaseFileField):
     def __init__(self, label=None, validators=None, auto_save=True, upload_dir=None, upload_backend=None,\
-                 uuid_prefix=None, keep_filename=None, subfolders=None, backend_in_filename=True, **kwargs):
+                 uuid_prefix=None, keep_filename=None, subfolders=None, backend_in_filename=True,
+                 save_original_filename=None, save_file_size=None, save_mimetype=None, **kwargs):
         super(FileField, self).__init__(label, validators, **kwargs)
         self.file = None
+        self.file_size = None
         self.auto_save = auto_save
         self.upload_dir = upload_dir
         self._upload_backend = upload_backend
@@ -18,6 +20,9 @@ class FileField(BaseFileField):
         self.keep_filename = keep_filename
         self.subfolders = subfolders
         self.backend_in_filename = backend_in_filename
+        self.save_original_filename = save_original_filename
+        self.save_file_size = save_file_size
+        self.save_mimetype = save_mimetype
 
     @property
     def upload_backend(self):
@@ -40,6 +45,11 @@ class FileField(BaseFileField):
             self.data = self.upload_backend.name + '://' + self.filename
         else:
             self.data = self.filename
+
+        self.file.seek(0, os.SEEK_END)
+        self.file_size = self.file.tell()
+        self.file.seek(0)
+
         if self.auto_save:
             self.save_file()
 
@@ -51,6 +61,15 @@ class FileField(BaseFileField):
         if not isinstance(self.file, FileStorage):
             return False
         return self.file.filename not in [None, '', '<fdopen>']
+
+    def populate_obj(self, obj, name):
+        setattr(obj, name, self.data)
+        if self.save_original_filename:
+            setattr(obj, self.save_original_filename, self.file.filename)
+        if self.save_file_size:
+            setattr(obj, self.save_file_size, self.file_size)
+        if self.save_mimetype:
+            setattr(obj, self.save_mimetype, self.file.mimetype)
 
 
 class FileAllowed(object):
