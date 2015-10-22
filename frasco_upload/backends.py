@@ -45,8 +45,8 @@ class LocalStorageBackend(StorageBackend):
         filename = safe_join(self.options["upload_dir"], filename)
         if not os.path.isabs(filename):
             filename = os.path.join(current_app.root_path, filename)
-        if os.path.exists(pathname):
-            os.unlink(pathname)
+        if os.path.exists(filename):
+            os.unlink(filename)
 
 
 @file_upload_backend
