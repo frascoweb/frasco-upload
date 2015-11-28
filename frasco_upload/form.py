@@ -12,7 +12,6 @@ class FileField(BaseFileField):
                  save_original_filename=None, save_file_size=None, save_mimetype=None, **kwargs):
         super(FileField, self).__init__(label, validators, **kwargs)
         self.file = None
-        self.file_size = None
         self.auto_save = auto_save
         self.upload_dir = upload_dir
         self._upload_backend = upload_backend
@@ -46,12 +45,12 @@ class FileField(BaseFileField):
         else:
             self.data = self.filename
 
-        self.file.seek(0, os.SEEK_END)
-        self.file_size = self.file.tell()
-        self.file.seek(0)
-
         if self.auto_save:
             self.save_file()
+
+    @property
+    def file_size(self):
+        return current_app.features.upload.get_file_size(self.file)
 
     def save_file(self):
         self.upload_backend.save(self.file, self.filename)

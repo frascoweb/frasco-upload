@@ -5,6 +5,7 @@ from flask import send_from_directory
 import uuid
 import os
 from tempfile import NamedTemporaryFile
+from .utils import *
 
 
 class UploadFeature(Feature):
@@ -13,6 +14,7 @@ class UploadFeature(Feature):
                 "upload_dir": "uploads",
                 "upload_url": "/uploads",
                 "uuid_prefixes": True,
+                "uuid_prefix_path_separator": False,
                 "keep_filenames": True,
                 "subfolders": False}
 
@@ -60,7 +62,7 @@ class UploadFeature(Feature):
         else:
             filename = secure_filename(filename)
             if uuid_prefix:
-                filename = str(uuid.uuid4()) + "-" + filename
+                filename = str(uuid.uuid4()) + ("/" if self.options['uuid_prefix_path_separator'] else "-") + filename
 
         if subfolders:
             if uuid_prefix:
@@ -75,6 +77,12 @@ class UploadFeature(Feature):
             filename = backend + '://' + filename
 
         return filename
+
+    def get_file_size(self, file):
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+        return size
 
     @action(default_option='file')
     def save_uploaded_file_temporarly(self, file):
@@ -97,10 +105,10 @@ class UploadFeature(Feature):
             backend, filename = self.get_backend_from_filename(filename)
         return self.get_backend(backend).url_for(filename, **kwargs)
 
-    def delete(self, filename, backend=None):
+    def delete(self, filename, backend=None, **kwargs):
         if not backend:
             backend, filename = self.get_backend_from_filename(filename)
-        self.get_backend(backend).delete(filename)
+        self.get_backend(backend).delete(filename, **kwargs)
 
 
 def url_for_upload(filename, **kwargs):
