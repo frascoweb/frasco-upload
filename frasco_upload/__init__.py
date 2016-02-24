@@ -4,8 +4,18 @@ from werkzeug import secure_filename
 from flask import send_from_directory
 import uuid
 import os
-from tempfile import NamedTemporaryFile
 from .utils import *
+from io import BytesIO
+from tempfile import TemporaryFile, NamedTemporaryFile
+from flask.wrappers import Request
+
+
+def _get_file_stream(self, total_content_length, content_type, filename=None, content_length=None):
+    if total_content_length > 1024 * 500:
+        return TemporaryFile('wb+', dir=os.environ.get('FRASCO_UPLOAD_TMP_DIR'))
+    return BytesIO()
+
+Request._get_file_stream = _get_file_stream
 
 
 class UploadFeature(Feature):
