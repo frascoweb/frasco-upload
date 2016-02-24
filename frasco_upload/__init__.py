@@ -23,6 +23,7 @@ class UploadFeature(Feature):
     defaults = {"default_backend": "local",
                 "upload_dir": "uploads",
                 "upload_url": "/uploads",
+                "upload_tmp_dir": None,
                 "uuid_prefixes": True,
                 "uuid_prefix_path_separator": False,
                 "keep_filenames": True,
@@ -96,7 +97,7 @@ class UploadFeature(Feature):
 
     @action(default_option='file')
     def save_uploaded_file_temporarly(self, file):
-        tmp = NamedTemporaryFile(delete=False)
+        tmp = NamedTemporaryFile(delete=False, dir=self.options['upload_tmp_dir'])
         tmp.close()
         file.save(tmp.name)
         return tmp.name
