@@ -6,7 +6,7 @@ import uuid
 import os
 from .utils import *
 from io import BytesIO
-from tempfile import TemporaryFile, NamedTemporaryFile
+from tempfile import TemporaryFile, NamedTemporaryFile, gettempdir
 from flask.wrappers import Request
 
 
@@ -96,11 +96,15 @@ class UploadFeature(Feature):
         return size
 
     @action(default_option='file')
-    def save_uploaded_file_temporarly(self, file):
-        tmp = NamedTemporaryFile(delete=False, dir=self.options['upload_tmp_dir'])
-        tmp.close()
-        file.save(tmp.name)
-        return tmp.name
+    def save_uploaded_file_temporarly(self, file, filename=None):
+        if filename:
+            tmpfilename = os.path.join(self.options['upload_tmp_dir'] or gettempdir(), filename)
+        else:
+            tmp = NamedTemporaryFile(delete=False, dir=self.options['upload_tmp_dir'])
+            tmp.close()
+            tmpfilename = tmp.name
+        file.save(tmpfilename)
+        return tmpfilename
 
     def save(self, file, filename=None, backend=None, **kwargs):
         if not filename:
