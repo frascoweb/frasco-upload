@@ -1,6 +1,6 @@
 from frasco import Feature, current_app, action
 from .backends import upload_backends, StorageBackend
-from werkzeug import secure_filename
+from werkzeug import secure_filename, FileStorage
 from flask import send_from_directory
 import uuid
 import os
@@ -21,6 +21,7 @@ Request._get_file_stream = _get_file_stream
 class UploadFeature(Feature):
     name = 'upload'
     defaults = {"default_backend": "local",
+                "backends": {},
                 "upload_dir": "uploads",
                 "upload_url": "/uploads",
                 "upload_tmp_dir": None,
@@ -35,8 +36,7 @@ class UploadFeature(Feature):
         app.add_template_global(format_file_size)
 
         def send_uploaded_file(filename):
-            return send_from_directory(self.options["upload_dir"], filename,
-                cache_timeout=app.config['SEND_FILE_MAX_AGE_DEFAULT'])
+            return send_from_directory(self.options["upload_dir"], filename)
         app.add_url_rule(self.options["upload_url"] + "/<path:filename>",
                          endpoint="static_upload",
                          view_func=send_uploaded_file)
@@ -47,9 +47,14 @@ class UploadFeature(Feature):
         if name is None:
             name = self.options['default_backend']
         if name not in self.backends:
-            if name not in upload_backends:
-                raise Exception("Upload backend '%s' does not exist" % name)
-            self.backends[name] = upload_backends[name](self.options)
+            backend = name
+            options = self.options
+            if name in self.options['backends']:
+                options = dict(self.options, **self.options['backends'][name])
+                backend = options.pop('backend') 
+            if backend not in upload_backends:
+                raise Exception("Upload backend '%s' does not exist" % backend)
+            self.backends[name] = upload_backends[backend](options)
         return self.backends[name]
 
     def get_backend_from_filename(self, filename):
@@ -106,7 +111,13 @@ class UploadFeature(Feature):
         file.save(tmpfilename)
         return tmpfilename
 
+    def upload(self, pathname, *args, **kwargs):
+        with open(pathname, 'rb') as f:
+            return self.save(FileStorage(f, os.path.basename(pathname)), *args, **kwargs)
+
     def save(self, file, filename=None, backend=None, **kwargs):
+        if not isinstance(file, FileStorage):
+            file = FileStorage(file)
         if not filename:
             filename = self.generate_filename(file.filename, backend=backend, **kwargs)
         r = filename
