@@ -113,7 +113,7 @@ class UploadFeature(Feature):
 
     def upload(self, pathname, *args, **kwargs):
         with open(pathname, 'rb') as f:
-            return self.save(FileStorage(f, os.path.basename(pathname)), *args, **kwargs)
+            return self.save(FileStorage(f, kwargs.get('name', os.path.basename(pathname))), *args, **kwargs)
 
     def save(self, file, filename=None, backend=None, **kwargs):
         if not isinstance(file, FileStorage):
