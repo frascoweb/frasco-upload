@@ -103,7 +103,7 @@ class UploadFeature(Feature):
     @action(default_option='file')
     def save_uploaded_file_temporarly(self, file, filename=None):
         if filename:
-            tmpfilename = os.path.join(self.options['upload_tmp_dir'] or gettempdir(), filename)
+            tmpfilename = os.path.join(self.options['upload_tmp_dir'] or gettempdir(), filename.replace('/', '-'))
         else:
             tmp = NamedTemporaryFile(delete=False, dir=self.options['upload_tmp_dir'])
             tmp.close()
