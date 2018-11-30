@@ -105,7 +105,8 @@ class UploadFeature(Feature):
         if filename:
             tmpfilename = os.path.join(self.options['upload_tmp_dir'] or gettempdir(), filename.replace('/', '-'))
         else:
-            tmp = NamedTemporaryFile(delete=False, dir=self.options['upload_tmp_dir'])
+            _, ext = os.path.splitext(file.filename)
+            tmp = NamedTemporaryFile(delete=False, suffix=ext, dir=self.options['upload_tmp_dir'])
             tmp.close()
             tmpfilename = tmp.name
         file.save(tmpfilename)
